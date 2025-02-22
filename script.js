@@ -255,3 +255,22 @@ document.addEventListener("DOMContentLoaded", () => {
         console.error("Video Error:", video.error);
     });
 });
+
+document.addEventListener("DOMContentLoaded", () => {
+    const video = document.getElementById("video");
+    const homeButton = document.querySelector(".home-button");
+
+    // Function to hide home button when video plays
+    video.addEventListener("play", () => {
+        homeButton.style.display = "none";
+    });
+
+    // Function to show home button when video pauses or ends
+    video.addEventListener("pause", () => {
+        homeButton.style.display = "flex";
+    });
+
+    video.addEventListener("ended", () => {
+        homeButton.style.display = "flex";
+    });
+});
