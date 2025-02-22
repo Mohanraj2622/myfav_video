@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Advanced Video Player</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Previous styles remain the same */
+        :root {
+            --primary-color: #2196f3;
+            --dark-bg: #121212;
+            --light-bg: #f5f5f5;
+            --control-bg: rgba(0, 0, 0, 0.7);
+            --text-light: #fff;
+            --text-dark: #333;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            transition: background-color 0.3s ease;
+        }
+
+        body.light-mode {
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            position: relative;
+        }
+
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+
+        /* New styles for rotation */
+        .video-rotate-0 {
+            transform: rotate(0deg);
+        }
+
+        .video-rotate-90 {
+            transform: rotate(90deg);
+        }
+
+        .video-rotate-180 {
+            transform: rotate(180deg);
+        }
+
+        .video-rotate-270 {
+            transform: rotate(270deg);
+        }
+
+        /* Adjust container for vertical video */
+        .vertical-video {
+            height: 100vw;
+            width: auto;
+            max-height: 80vh;
+        }
+
+        /* Previous control styles remain the same */
+        .controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--control-bg);
+            padding: 15px;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto auto auto;
+            gap: 15px;
+            align-items: center;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .video-wrapper:hover .controls {
+            transform: translateY(0);
+        }
+
+        /* Button Styles */
+        .control-button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+
+        .control-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--primary-color);
+            transform: scale(1.1);
+        }
+
+        /* Home Button Special Styling */
+        .home-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: var(--primary-color);
+            color: var(--text-light);
+            padding: 10px 20px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .home-button:hover {
+            background: var(--hover-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .home-button i {
+            font-size: 16px;
+        }
+
+        .progress-container {
+            grid-column: 1 / -1;
+            width: 100%;
+            height: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: var(--primary-color);
+            border-radius: 5px;
+            width: 0;
+        }
+
+        .time {
+            color: var(--text-light);
+            font-size: 14px;
+            min-width: 100px;
+        }
+
+        button {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            transition: color 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            color: var(--primary-color);
+        }
+
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="range"] {
+            width: 100px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            background: var(--primary-color);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .theater-mode {
+            max-width: none;
+            width: 100%;
+            height: 90vh;
+        }
+
+        @media (max-width: 768px) {
+            .controls {
+                grid-template-columns: auto 1fr auto;
+                gap: 10px;
+                padding: 10px;
+            }
+
+            .volume-container {
+                display: none;
+            }
+
+            .time {
+                font-size: 12px;
+                min-width: 80px;
+            }
+
+            .control-button {
+                font-size: 16px;
+                width: 35px;
+                height: 35px;
+            }
+
+            .home-button {
+                top: 10px;
+                left: 10px;
+                padding: 8px 16px;
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="video-wrapper">
+            <a href="/" class="home-button">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <video id="video" src="videoplayback.mp4" preload="metadata"></video>
+            <div class="controls">
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <button id="playPause" aria-label="Play">
+                    <i class="fas fa-play"></i>
+                </button>
+                <span class="time" id="time">0:00 / 0:00</span>
+                <div class="volume-container">
+                    <button id="volume" aria-label="Volume">
+                        <i class="fas fa-volume-up"></i>
+                    </button>
+                    <input type="range" id="volumeRange" min="0" max="1" step="0.1" value="1"
+                        aria-label="Volume control">
+                </div>
+                <!-- New Rotate Button -->
+                <button id="rotateBtn" aria-label="Rotate video">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+                <button id="theaterMode" aria-label="Theater mode">
+                    <i class="fas fa-tv"></i>
+                </button>
+                <button id="fullscreen" aria-label="Fullscreen">
+                    <i class="fas fa-expand"></i>
+                </button>
+                <button id="darkMode" aria-label="Toggle dark mode">
+                    <i class="fas fa-moon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Add required styles for rotation
+            const styleSheet = document.createElement("style");
+            styleSheet.textContent = `
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            background: #000;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: height 0.3s ease;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+            display: block;
+            transition: transform 0.3s ease;
+            transform-origin: center center;
+        }
+
+        .video-rotated {
+            transform: rotate(90deg) translateY(-100%);
+            width: 100vh;
+            height: 100vw;
+            max-width: none;
+            position: relative;
+            left: 50%;
+            transform-origin: left top;
+        }
+
+        .video-wrapper.rotated {
+            height: 100vw;
+        }
+
+        .controls {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto auto auto auto;
+            gap: 15px;
+            align-items: center;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .video-wrapper:hover .controls {
+            transform: translateY(0);
+        }
+    `;
+            document.head.appendChild(styleSheet);
+
+            // DOM Elements
+            const video = document.getElementById("video");
+            const videoWrapper = document.querySelector(".video-wrapper");
+            const playPauseBtn = document.getElementById("playPause");
+            const volumeBtn = document.getElementById("volume");
+            const volumeRange = document.getElementById("volumeRange");
+            const fullscreenBtn = document.getElementById("fullscreen");
+            const theaterModeBtn = document.getElementById("theaterMode");
+            const darkModeBtn = document.getElementById("darkMode");
+            const progressBar = document.getElementById("progressBar");
+            const progressContainer = document.getElementById("progressContainer");
+            const timeDisplay = document.getElementById("time");
+            const rotateBtn = document.getElementById("rotateBtn");
+
+            // State variables
+            let isRotated = false;
+            let isTheaterMode = false;
+            let isDarkMode = true;
+            let lastVolume = 1;
+            video.volume = volumeRange.value;
+
+            // Utility Functions
+            const formatTime = seconds => {
+                const minutes = Math.floor(seconds / 60);
+                seconds = Math.floor(seconds % 60);
+                return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            };
+
+            // Play/Pause Functions
+            const togglePlay = () => {
+                if (video.paused) {
+                    video.play();
+                    playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    video.pause();
+                    playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            };
+
+            // Volume Functions
+            const updateVolume = () => {
+                video.volume = volumeRange.value;
+                lastVolume = video.volume;
+                const icon = video.volume === 0 ? 'fa-volume-mute' :
+                    video.volume < 0.5 ? 'fa-volume-down' : 'fa-volume-up';
+                volumeBtn.innerHTML = `<i class="fas ${icon}"></i>`;
+            };
+
+            const toggleMute = () => {
+                if (video.volume > 0) {
+                    lastVolume = video.volume;
+                    video.volume = 0;
+                    volumeRange.value = 0;
+                } else {
+                    video.volume = lastVolume;
+                    volumeRange.value = lastVolume;
+                }
+                updateVolume();
+            };
+
+            // Progress Functions
+            const updateProgress = () => {
+                const percentage = (video.currentTime / video.duration) * 100;
+                progressBar.style.width = `${percentage}%`;
+                timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)}`;
+            };
+
+            const setProgress = (e) => {
+                const newTime = (e.offsetX / progressContainer.offsetWidth) * video.duration;
+                video.currentTime = newTime;
+            };
+
+            // Rotation Functions
+            const toggleRotation = () => {
+                isRotated = !isRotated;
+
+                if (isRotated) {
+                    video.classList.add('video-rotated');
+                    videoWrapper.classList.add('rotated');
+
+                    // Calculate and set dimensions based on aspect ratio
+                    const videoAspectRatio = video.videoWidth / video.videoHeight;
+                    const wrapperWidth = videoWrapper.offsetWidth;
+                    const newHeight = wrapperWidth * videoAspectRatio;
+
+                    videoWrapper.style.height = `${wrapperWidth}px`;
+                    video.style.width = `${newHeight}px`;
+                    rotateBtn.innerHTML = '<i class="fas fa-undo"></i>';
+                } else {
+                    video.classList.remove('video-rotated');
+                    videoWrapper.classList.remove('rotated');
+                    videoWrapper.style.height = '';
+                    video.style.width = '';
+                    rotateBtn.innerHTML = '<i class="fas fa-sync"></i>';
+                }
+            };
+
+            // Fullscreen Functions
+            const toggleFullscreen = () => {
+                if (!document.fullscreenElement) {
+                    videoWrapper.requestFullscreen();
+                    fullscreenBtn.innerHTML = '<i class="fas fa-compress"></i>';
+                } else {
+                    document.exitFullscreen();
+                    fullscreenBtn.innerHTML = '<i class="fas fa-expand"></i>';
+                }
+            };
+
+            // Theater Mode Functions
+            const toggleTheaterMode = () => {
+                isTheaterMode = !isTheaterMode;
+                videoWrapper.classList.toggle('theater-mode');
+                theaterModeBtn.innerHTML = isTheaterMode ?
+                    '<i class="fas fa-compress"></i>' : '<i class="fas fa-tv"></i>';
+            };
+
+            // Dark Mode Functions
+            const toggleDarkMode = () => {
+                isDarkMode = !isDarkMode;
+                document.body.classList.toggle('light-mode');
+                darkModeBtn.innerHTML = isDarkMode ?
+                    '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+            };
+
+            // Event Listeners
+            playPauseBtn.addEventListener("click", togglePlay);
+            video.addEventListener("click", togglePlay);
+            volumeBtn.addEventListener("click", toggleMute);
+            volumeRange.addEventListener("input", updateVolume);
+            video.addEventListener("timeupdate", updateProgress);
+            progressContainer.addEventListener("click", setProgress);
+            fullscreenBtn.addEventListener("click", toggleFullscreen);
+            theaterModeBtn.addEventListener("click", toggleTheaterMode);
+            darkModeBtn.addEventListener("click", toggleDarkMode);
+            rotateBtn.addEventListener("click", toggleRotation);
+
+            // Reset rotation when entering/exiting fullscreen
+            document.addEventListener("fullscreenchange", () => {
+                if (!document.fullscreenElement && isRotated) {
+                    toggleRotation();
+                }
+            });
+
+            // Handle window resize
+            window.addEventListener("resize", () => {
+                if (isRotated) {
+                    const videoAspectRatio = video.videoWidth / video.videoHeight;
+                    const wrapperWidth = videoWrapper.offsetWidth;
+                    const newHeight = wrapperWidth * videoAspectRatio;
+
+                    videoWrapper.style.height = `${wrapperWidth}px`;
+                    video.style.width = `${newHeight}px`;
+                }
+            });
+
+            // Keyboard Controls
+            document.addEventListener("keydown", (e) => {
+                if (["Space", "ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].includes(e.code)) {
+                    e.preventDefault();
+                }
+
+                switch (e.code) {
+                    case "Space":
+                        togglePlay();
+                        break;
+                    case "ArrowRight":
+                        video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                        break;
+                    case "ArrowLeft":
+                        video.currentTime = Math.max(0, video.currentTime - 10);
+                        break;
+                    case "ArrowUp":
+                        volumeRange.value = Math.min(1, parseFloat(volumeRange.value) + 0.1);
+                        updateVolume();
+                        break;
+                    case "ArrowDown":
+                        volumeRange.value = Math.max(0, parseFloat(volumeRange.value) - 0.1);
+                        updateVolume();
+                        break;
+                    case "KeyF":
+                        toggleFullscreen();
+                        break;
+                    case "KeyR":
+                        toggleRotation();
+                        break;
+                    case "KeyM":
+                        toggleMute();
+                        break;
+                }
+            });
+
+            // Touch Controls
+            let touchStartX = 0;
+            let touchStartY = 0;
+            let touchStartTime = 0;
+
+            video.addEventListener("touchstart", (e) => {
+                touchStartX = e.touches[0].clientX;
+                touchStartY = e.touches[0].clientY;
+                touchStartTime = Date.now();
+            });
+
+            video.addEventListener("touchend", (e) => {
+                const touchEndX = e.changedTouches[0].clientX;
+                const touchEndY = e.changedTouches[0].clientY;
+                const touchEndTime = Date.now();
+
+                const deltaX = touchEndX - touchStartX;
+                const deltaY = touchEndY - touchStartY;
+                const deltaTime = touchEndTime - touchStartTime;
+
+                // Tap for play/pause
+                if (Math.abs(deltaX) < 10 && Math.abs(deltaY) < 10 && deltaTime < 200) {
+                    togglePlay();
+                }
+                // Horizontal swipe for seeking
+                else if (Math.abs(deltaX) > 50 && Math.abs(deltaY) < 30) {
+                    if (deltaX > 0) {
+                        video.currentTime = Math.min(video.duration, video.currentTime + 10);
+                    } else {
+                        video.currentTime = Math.max(0, video.currentTime - 10);
+                    }
+                }
+                // Vertical swipe for volume
+                else if (Math.abs(deltaY) > 50 && Math.abs(deltaX) < 30) {
+                    if (deltaY < 0) {
+                        volumeRange.value = Math.min(1, video.volume + 0.1);
+                    } else {
+                        volumeRange.value = Math.max(0, video.volume - 0.1);
+                    }
+                    updateVolume();
+                }
+            });
+
+            // Error handling
+            video.addEventListener("error", () => {
+                console.error("Video Error:", video.error);
+                // Add custom error UI here if needed
+            });
+        });
+    </script>
+</body>
+
+</html>
